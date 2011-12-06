@@ -6,7 +6,7 @@
 	url = git://github.com/tschaub/buildkit.git
 [submodule "app/static/externals/gxp"]
 	path = app/static/externals/gxp
-	url = git://github.com/opengeo/gxp.git
+	url = git://github.com/caam/gxp.git
 [submodule "app/static/externals/GeoExt"]
 	path = app/static/externals/GeoExt
 	url = git://github.com/geoext/geoext.git
