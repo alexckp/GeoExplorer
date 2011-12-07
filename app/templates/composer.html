@@ -43,42 +43,60 @@
                     title: "Local GeoServer",
                     ptype: "gxp_wmscsource"
                 },
-                suite: {
-                    url: "http://v2.suite.opengeo.org/geoserver/ows",
-                    title: "Remote Suite GeoServer"
+                cartomur: {
+                  url: "http://cartomur.imida.es/SgdWms/SgdWms_cartomur.dll/WMS?",
+                    title: "CARTOMUR"
+                }, 
+                catastro: {
+                  url: "http://www1.sedecatastro.gob.es/Cartografia/WMS/ServidorWMS.aspx?",
+                    title: "catastro"
+                }, 
+                mapabase: {
+                  url: "http://iderm.imida.es/arcgis/services/TOPOGRAFICOS/Topografico_UTM_ETRS89/MapServer/WMSServer",
+                  title: "MAPABASE"
                 },
-                mapquest: {
-                    ptype: "gxp_mapquestsource"
-                },
-                osm: {
-                    ptype: "gxp_osmsource"
-                },
-                google: {
-                    ptype: "gxp_googlesource"
-                },
-                bing: {
-                    ptype: "gxp_bingsource"
-                },
-                mapbox: {
-                    ptype: "gxp_mapboxsource"
+                topograficos: {
+                  url: "http://iderm.imida.es/arcgis/services/TOPOGRAFICOS/MTR/MapServer/WMSServer",
+                  title: "TOPOGRAFICOS"
                 },
                 ol: {
                     ptype: "gxp_olsource"
                 }
             },
             map: {
-                projection: "EPSG:102113",
+                projection: "EPSG:25830",
                 units: "m",
-                maxResolution: 156543.0339,
+                maxResolution: 305.748113140558,
                 maxExtent: [
-                    -20037508.34, -20037508.34,
-                    20037508.34, 20037508.34
+                    518423, 4118918,
+                    740113, 4318973
                 ],
+                numZoomLevels: 12,
                 layers: [{
-                    source: "google",
-                    title: "Google Roadmap",
-                    name: "ROADMAP",
-                    group: "background"
+                  title: "Orto 2009",
+                  name: "Ortofoto_2009",
+                  source: "cartomur",
+                  group: "background"
+                }, { 
+                  source: "ol",
+                  group: "background",
+                  type: "OpenLayers.Layer.ArcGIS93Rest",
+                  args: [
+                    "Natmur 2008",
+                    "http://iderm.imida.es/ArcGIS/rest/services/Raster/Natmur2008_UTM_ETRS89/MapServer/export", 
+                    {layers: "show:0", format: 'jpeg'}, 
+                    {singleTile: false, visibility: false, noLegend: true}
+                  ]
+                }, {
+                  source: "ol",
+                  group: "background",
+                  type: "OpenLayers.Layer.ArcGIS93Rest",
+                  args: [
+                    "Mapa Topográfico",
+                    "http://iderm.imida.es/ArcGIS/rest/services/TOPOGRAFICOS/MTR/MapServer/export",
+                    {layers: "show:0", format: 'jpeg'}, 
+                    {singleTile: false, visibility: true, noLegend: true}
+                  ]
                 }, {
                     source: "ol",
                     group: "background",
@@ -89,7 +107,7 @@
                     ]
                 }],
                 center: [0, 0],
-                zoom: 2
+                zoom: 1
             }
         });
     </script>
