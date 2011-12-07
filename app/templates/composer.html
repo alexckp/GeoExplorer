@@ -13,6 +13,8 @@
       }
     </style>
     <script>
+        var getParams = document.URL.split("?"),
+            urlParams=Ext.urlDecode(getParams[getParams.length - 1]);
         // optionally set locale based on query string parameter
         if (GeoExt.Lang) {
             GeoExt.Lang.set(OpenLayers.Util.getParameters()["locale"] || GeoExt.Lang.locale);
@@ -119,5 +121,12 @@
           app.mapPanel.map.addControl(new OpenLayers.Control.MousePosition(
             {numDigits: 0, suffix: ' m ETRS89', prefix: ' x, y: ', separator: ' m, '}
           )); 
+          var myX= urlParams["x"],
+              myY= urlParams["y"],
+              myZ= urlParams["z"];
+          if (myX && myY && myZ) {
+            app.mapPanel.map.panTo(new OpenLayers.LonLat(myX,myY));
+            app.mapPanel.map.zoomTo(myZ);
+          }
         });
     </script>
