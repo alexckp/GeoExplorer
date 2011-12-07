@@ -621,7 +621,123 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                     }
                 }),
                 autoScroll: true,
-                bbar: ["->", {
+                bbar: ["->", 
+                {
+                  text: "Todos",
+                  tooltip: "Seleccionar todas las filas",
+                  handler: function(btn) {
+                    Ext.getCmp('featureGrid').selModel.selectAll();
+                  }
+                },
+                {
+                  text: "GML",
+                  tooltip: "generar fichero GML (vectorial) de selección",
+                  handler: function(btn) {
+                    var formatter = new OpenLayers.Format.GML(),
+                        features=[];
+                    Ext.getCmp('featureGrid').selModel.each(function(el){
+                      features.push(el.getFeature());
+                    });
+                    new Ext.Window({
+                      animateTarget: btn.el,
+                      id: "gmlPopup",
+                      title: "GML de selección",
+                      height: 200,
+                      width: 600,
+                      autoScroll: true,
+                      html: Ext.util.Format.htmlEncode(formatter.write(features))
+                    }).show();
+                  }
+                },
+                {
+                  text: "JSON",
+                  tooltip: "generar fichero geoJSON (vectorial) de selección",
+                  handler: function(btn) {
+                    var formatter = new OpenLayers.Format.GeoJSON(),
+                        features=[];
+                    Ext.getCmp('featureGrid').selModel.each(function(el){
+                      features.push(el.getFeature());
+                    });
+                    new Ext.Window({
+                      animateTarget: btn.el,
+                      id: "gmlPopup",
+                      title: "GeoJSON de selección",
+                      height: 200,
+                      width: 600,
+                      autoScroll: true,
+                      html: Ext.util.Format.htmlEncode(formatter.write(features))
+                    }).show();
+                  }
+                },
+                {
+                  text: "WKT",
+                  tooltip: "generar fichero WKT (vectorial) de selección",
+                  handler: function(btn) {
+                    var formatter = new OpenLayers.Format.WKT(),
+                        features=[];
+                    Ext.getCmp('featureGrid').selModel.each(function(el){
+                      features.push(el.getFeature());
+                    });
+                    new Ext.Window({
+                      animateTarget: btn.el,
+                      id: "gmlPopup",
+                      title: "WKT de selección",
+                      height: 200,
+                      width: 600,
+                      autoScroll: true,
+                      html: Ext.util.Format.htmlEncode(formatter.write(features))
+                    }).show();
+                  }
+               },
+               {
+                  text: "CSV",
+                  tooltip: "generar fichero CSV (excel) de selección",
+                  handler: function(btn) {
+                    var columnas=[],
+                        sep,
+                        col,
+                        lista,
+                        miCsv="",
+                        colModels= Ext.getCmp('featureGrid').colModel.getColumnsBy(function(){return true});
+                    for (col in colModels) {
+                      if (colModels.hasOwnProperty(col)) {
+                        columnas.push(colModels[col].header);
+                      }
+                    }
+                    sep="";
+                    for (col in columnas) {
+                      if (columnas.hasOwnProperty(col)) {
+                        miCsv += sep + '"' + columnas[col] + '"';
+                        sep = ",";
+                      }
+                    }
+                    miCsv+= "<br/>";
+                    Ext.getCmp('featureGrid').selModel.each(function(el){
+                      sep="";
+                      lista=el.getFeature().attributes;
+                      for (col in columnas) {
+                        if (columnas.hasOwnProperty(col)) {
+                          miCsv += sep + '"'
+                          if (lista[columnas[col]]) {
+                            miCsv += lista[columnas[col]];
+                          }
+                          miCsv += '"';
+                          sep = ",";
+                        }
+                      }
+                      miCsv+= "<br/>";
+                    });
+                    new Ext.Window({
+                      animateTarget: btn.el,
+                      title: "CSV de selección",
+                      height: 200,
+                      width: 600,
+                      autoScroll: true,
+                      html: miCsv
+                    }).show();
+                  }
+                },
+                {
                     text: "Display on map",
                     enableToggle: true,
                     pressed: true,
