@@ -368,6 +368,16 @@ GeoExplorer.Composer = Ext.extend(GeoExplorer, {
      * Saves the map config and displays the URL in a window.
      */ 
     save: function(callback, scope) {
+        // Guardo la configuración de columnas:
+        var queryPanel=Ext.getCmp('queryPanel'),
+            featureGrid=Ext.getCmp('featureGrid');
+        if (queryPanel && queryPanel.selectedLayer.data.name) {
+          if (!this.initialConfig.initColProps) {
+            this.initialConfig.initColProps={};
+          }
+          this.initialConfig.initColProps[queryPanel.selectedLayer.data.name]=
+                    featureGrid.getColProps();
+        }
         var configStr = Ext.util.JSON.encode(this.getState());
         var method, url;
         if (this.id) {

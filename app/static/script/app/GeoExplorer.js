@@ -85,6 +85,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
     descriptionText: "Description",
     contactText: "Contact",
     aboutThisMapText: "About this Map",
+    initColProps: {},
     // End i18n.
     
     /**
@@ -392,6 +393,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
 
         if (this.initialConfig.featureTypes) {
             var queryPanel = new gxp.QueryPanel({
+                id: 'queryPanel',
                 title: "Feature Query",
                 region: "west",
                 width: 390,
@@ -456,6 +458,10 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                         featureGrid.setTitle("Search Results (loading ...)");
                         new Ext.LoadMask(featureGrid.el, {msg: 'Please Wait...', store: store}).show();
                         this.mapPanel.map.raiseLayer(this.featureLayer,999);
+                        // Cargar propiedades de columnas de initColProps
+                        queryPanel.selectedLayer.data.name &&
+                       this.initColProps[queryPanel.selectedLayer.data.name] &&
+                       featureGrid.setColProps(this.initColProps[queryPanel.selectedLayer.data.name]);
                     },
                     storeload: function(panel, store, records) {
                         featureGrid.setTitle(this.getSearchResultsTitle(store.getTotalCount()));
@@ -596,6 +602,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             });
     
             var featureGrid = new gxp.grid.FeatureGrid({
+                id: 'featureGrid',
                 title: "Search Results (submit a query to see results)",
                 region: "center",
                 layer: this.featureLayer,
@@ -645,8 +652,11 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                     scope: this                
                 }]
             });
+            this.initColProps[this.featureLayer.name] &&
+              featureGrid.setColProps(this.initColProps[this.featureLayer.name]);
             
             var southPanel = new Ext.Panel({
+                id: 'southPanel',
                 layout: "border",
                 region: "south",
                 height: 250,
