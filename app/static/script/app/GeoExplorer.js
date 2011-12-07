@@ -95,6 +95,48 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
     
     toggleGroup: "toolGroup",
 
+    /** private: method[createFeatureLayer]
+     *  Create a vector layer and assign it to this.featureLayer
+     */
+    createFeatureLayer: function() {
+
+        
+        this.featureLayer = new OpenLayers.Layer.Vector(null, {
+            displayInLayerSwitcher: false,
+            styleMap: new OpenLayers.StyleMap({
+                "default": new OpenLayers.Style(null, {
+                    rules: [new OpenLayers.Rule({
+                        symbolizer: {
+                            "Point": {
+                                pointRadius: 4,
+                                graphicName: "square",
+                                fillColor: "white",
+                                fillOpacity: 1,
+                                strokeWidth: 1,
+                                strokeOpacity: 1,
+                                strokeColor: "#333333"
+                            },
+                            "Line": {
+                                strokeWidth: 4,
+                                strokeOpacity: 1,
+                                strokeColor: "#ff9933"
+                            },
+                            "Polygon": {
+                                strokeWidth: 2,
+                                strokeOpacity: 1,
+                                strokeColor: "#ff6633",
+                                fillColor: "white",
+                                fillOpacity: 0.3
+                            }
+                        }
+                    })]
+                })
+            })    
+        });
+        this.mapPanel.map.addLayer(this.featureLayer);
+        
+    },
+
     constructor: function(config) {
         this.mapItems = [
             {
@@ -183,7 +225,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
 
     loadConfig: function(config) {
         
-        var mapUrl = window.location.hash.substr(1);
+        var mapUrl = window.location.hash.substr(1).split("?")[0];
         var match = mapUrl.match(/^maps\/(\d+)$/);
         if (match) {
             this.id = Number(match[1]);
@@ -245,6 +287,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
     initPortal: function() {
         
         var westPanel = new Ext.Panel({
+            id: 'westPanel',
             border: false,
             layout: "border",
             region: "west",
@@ -258,6 +301,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                 {region: 'south', xtype: "container", layout: "fit", border: false, height: 200, id: 'legend'}
             ]
         });
+        this.createFeatureLayer();
         
         this.toolbar = new Ext.Toolbar({
             disabled: true,
@@ -345,16 +389,295 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             ],
             activeItem: 0
         });
+
+        if (this.initialConfig.featureTypes) {
+            var queryPanel = new gxp.QueryPanel({
+                title: "Feature Query",
+                region: "west",
+                width: 390,
+                autoScroll: true,
+                bodyStyle: "padding: 10px",
+                map: this.mapPanel.map,
+                maxFeatures: 100,
+                layerStore: new Ext.data.JsonStore({
+                    data: {layers: this.initialConfig.featureTypes},
+                    root: "layers",
+                    fields: ["title", "name", "namespace", "url", "schema"]
+                }),
+                bbar: ["->", {
+                    text: "Query",
+                    iconCls: "icon-find",
+                    disabled: true,
+                    handler: function() {
+                        queryPanel.query();
+                    }
+                }],
+                listeners: {
+                    ready: function(panel, store) {
+                        panel.getBottomToolbar().enable();
+                        this.featureStore = store;
+    
+                        var control = this.mapPanel.map.getControlsByClass(
+                            "OpenLayers.Control.DrawFeature")[0];
+                        var button = Ext.getCmp('westPanel').items.items[0].toolbars[0].find("iconCls","gxp-icon-addlayers")[0];
+                        
+                        var handlers = {
+                            "Point": OpenLayers.Handler.Point,
+                            "Line": OpenLayers.Handler.Path,
+                            "Curve": OpenLayers.Handler.Path,
+                            "Polygon": OpenLayers.Handler.Polygon,
+                            "Surface": OpenLayers.Handler.Polygon
+                        }
+                        
+                        var simpleType = panel.geometryType.replace("Multi", "");
+                        var Handler = handlers[simpleType];
+                        if(Handler) {
+                            var active = control.active;
+                            if(active) {
+                                control.deactivate();
+                            }
+                            control.handler = new Handler(
+                                control, control.callbacks,
+                                Ext.apply(control.handlerOptions, {multi: (simpleType != panel.geometryType)})
+                            );
+                            if(active) {
+                                control.activate();
+                            }
+                            button.enable();
+                            // hack to avoid button being disabled again when
+                            // app.ready is fired after queryPanel.ready
+                            delete button.initialConfig.disabled
+                        } else {
+                            button.disable();
+                        }
+                    },
+                    query: function(panel, store) {
+                        featureGrid.setStore(store);
+                        featureGrid.setTitle("Search Results (loading ...)");
+                        new Ext.LoadMask(featureGrid.el, {msg: 'Please Wait...', store: store}).show();
+                        this.mapPanel.map.raiseLayer(this.featureLayer,999);
+                    },
+                    storeload: function(panel, store, records) {
+                        featureGrid.setTitle(this.getSearchResultsTitle(store.getTotalCount()));
+                        store.on({
+                            "remove": function() {
+                                featureGrid.setTitle(this.getSearchResultsTitle(store.getTotalCount()-1));
+                            },
+                            scope: this
+                        })
+                    },
+                    scope: this
+                }
+            });
+            
+            // create a SelectFeature control
+            // "fakeKey" will be ignord by the SelectFeature control, so only one
+            // feature can be selected by clicking on the map, but allow for
+            // multiple selection in the featureGrid
+            var selectControl = new OpenLayers.Control.SelectFeature(
+                this.featureLayer, {clickout: false, multipleKey: "fakeKey"});
+            selectControl.events.on({
+                "activate": function() {
+                    selectControl.unselectAll(popup && popup.editing && {except: popup.feature});
+                },
+                "deactivate": function() {
+                    if(popup) {
+                        if(popup.editing) {
+                            popup.on("cancelclose", function() {
+                                selectControl.activate();
+                            }, this, {single: true})
+                        }
+                        popup.close();
+                    }
+                }
+            });
+                
+            var popup;
+            
+            this.featureLayer.events.on({
+                "featureunselected": function(evt) {
+                    if(popup) {
+                        popup.close();
+                    }
+                },
+                "beforefeatureselected": function(evt) {
+                    //TODO decide if we want to allow feature selection while a
+                    // feature is being edited. If so, we have to revisit the
+                    // SelectFeature/ModifyFeature setup, because that would
+                    // require to have the SelectFeature control *always*
+                    // activated *after* the ModifyFeature control. Otherwise. we
+                    // must not configure the ModifyFeature control in standalone
+                    // mode, and use the SelectFeature control that comes with the
+                    // ModifyFeature control instead.
+                    if(popup) {
+                        return !popup.editing;
+                    }
+                },
+                "featureselected": function(evt) {
+                    var feature = evt.feature;
+                    if(selectControl.active) {
+                        this._selectingFeature = true;
+                        popup = new gxp.FeatureEditPopup({
+                            collapsible: true,
+                            feature: feature,
+                            editing: feature.state === OpenLayers.State.INSERT,
+                            schema: queryPanel.attributeStore,
+                            allowDelete: true,
+                            width: 200,
+                            height: 250,
+                            listeners: {
+                                "close": function() {
+                                    if(feature.layer) {
+                                        selectControl.unselect(feature);
+                                    }
+                                },
+                                "featuremodified": function(popup, feature) {
+                                    popup.disable();
+                                    this.featureStore.on({
+                                        write: {
+                                            fn: function() {
+                                                if(popup) {
+                                                    popup.enable();
+                                                }
+                                            },
+                                            single: true
+                                        }
+                                    });                                
+                                    if(feature.state === OpenLayers.State.DELETE) {                                    
+                                        /**
+                                         * If the feature state is delete, we need to
+                                         * remove it from the store (so it is collected
+                                         * in the store.removed list.  However, it should
+                                         * not be removed from the layer.  Until
+                                         * http://trac.geoext.org/ticket/141 is addressed
+                                         * we need to stop the store from removing the
+                                         * feature from the layer.
+                                         */
+                                        var store = this.featureStore;
+                                        store._removing = true; // TODO: remove after http://trac.geoext.org/ticket/141
+                                        store.remove(store.getRecordFromFeature(feature));
+                                        delete store._removing; // TODO: remove after http://trac.geoext.org/ticket/141
+                                    }
+                                    this.featureStore.save();
+                                },
+                                "canceledit": function(popup, feature) {
+                                    this.featureStore.commitChanges();
+                                },
+                                scope: this
+                            }
+                        });
+                        popup.show();
+                    }
+                },
+                "beforefeaturesadded": function(evt) {
+                    if(featureGrid.store !== this.featureStore) {
+                        featureGrid.setStore(this.featureStore);
+                    }
+                },
+                "featuresadded": function(evt) {
+                    var feature = evt.features.length === 1 && evt.features[0];
+                    if(feature && feature.state === OpenLayers.State.INSERT) {
+                        selectControl.activate();
+                        selectControl.select(feature);
+                    }
+                },
+                scope: this
+            });
+            this.mapPanel.map.addControl(selectControl);
+            
+            queryPanel.on({
+                beforequery: function(panel) {
+                    if(popup && popup.editing) {
+                        popup.on("close", panel.query, panel, {single: true});
+                        popup.close();
+                        return false;
+                    }
+                }
+            });
+    
+            var featureGrid = new gxp.grid.FeatureGrid({
+                title: "Search Results (submit a query to see results)",
+                region: "center",
+                layer: this.featureLayer,
+                sm: new GeoExt.grid.FeatureSelectionModel({
+                    selectControl: selectControl,
+                    singleSelect: false,
+                    autoActivateControl: false,
+                    listeners: {
+                        "beforerowselect": function() {
+                            if(selectControl.active && !this._selectingFeature) {
+                                return false;
+                            }
+                            delete this._selectingFeature;
+                        },
+                        scope: this
+                    }
+                }),
+                autoScroll: true,
+                bbar: ["->", {
+                    text: "Display on map",
+                    enableToggle: true,
+                    pressed: true,
+                    toggleHandler: function(btn, pressed) {
+                        this.featureLayer.setVisibility(pressed);
+                    },
+                    scope: this
+                }, {
+                    text: "Zoom to selected",
+                    iconCls: "icon-zoom-to",
+                    handler: function(btn) {
+                        var bounds, geom, extent;
+                        featureGrid.getSelectionModel().each(function(r) {
+                            geom = r.get("feature").geometry;
+                            if(geom) {
+                                extent = geom.getBounds();
+                                if(bounds) {
+                                    bounds.extend(extent);
+                                } else {
+                                    bounds = extent.clone();
+                                }
+                            }
+                        }, this);
+                        if(bounds) {
+                            this.mapPanel.map.zoomToExtent(bounds);
+                        }
+                    },
+                    scope: this                
+                }]
+            });
+            
+            var southPanel = new Ext.Panel({
+                layout: "border",
+                region: "south",
+                height: 250,
+                split: true,
+                collapsible: true,
+                items: [queryPanel, featureGrid]
+            });
+    
+        }
         
-        this.portalItems = [{
-            region: "center",
-            layout: "border",
-            tbar: this.toolbar,
-            items: [
-                this.mapPanelContainer,
-                westPanel
-            ]
-        }];
+        if (southPanel) {
+            this.portalItems = [{
+                region: "center",
+                layout: "border",
+                tbar: this.toolbar,
+                items: [
+                    this.mapPanelContainer,
+                    westPanel, southPanel
+                ]
+            }];
+        } else {
+            this.portalItems = [{
+                region: "center",
+                layout: "border",
+                tbar: this.toolbar,
+                items: [
+                    this.mapPanelContainer,
+                    westPanel
+                ]
+            }];
+        } 
         
         GeoExplorer.superclass.initPortal.apply(this, arguments);        
     },
@@ -452,6 +775,12 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             items: [tabs]
         });
         win.show();
+    },
+    getSearchResultsTitle: function(count) {
+        var str = (count == 1 && "1 feature") ||
+            (count > 1 && count + " features") ||
+            "no features";
+        return "Search Results (" + str + ")";
     }
 });
 
