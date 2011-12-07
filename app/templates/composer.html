@@ -7,6 +7,11 @@
     <!-- PrintPreview resources -->
     <link rel="stylesheet" type="text/css" href="../externals/PrintPreview/resources/css/printpreview.css">
 
+    <style>
+      .olControlMousePosition {
+         background: #FFFFFF;
+      }
+    </style>
     <script>
         // optionally set locale based on query string parameter
         if (GeoExt.Lang) {
@@ -109,5 +114,10 @@
                 center: [0, 0],
                 zoom: 1
             }
+        });
+        app.on("ready", function () {
+          app.mapPanel.map.addControl(new OpenLayers.Control.MousePosition(
+            {numDigits: 0, suffix: ' m ETRS89', prefix: ' x, y: ', separator: ' m, '}
+          )); 
         });
     </script>
