@@ -118,7 +118,8 @@
                 center: [0, 0],
                 zoom: 1
             },
-            featureTypes: urlParams["f"] && Ext.util.JSON.decode(urlParams["f"])
+            featureTypes: urlParams["f"] && Ext.util.JSON.decode(urlParams["f"]),
+            showSave: urlParams["s"] && Ext.util.JSON.decode(urlParams["s"])
         });
         app.on("ready", function () {
           app.mapPanel.map.addControl(new OpenLayers.Control.MousePosition(
