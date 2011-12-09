@@ -621,7 +621,12 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                     }
                 }),
                 autoScroll: true,
+<<<<<<< HEAD
                 bbar: ["->", {
+=======
+                bbar: ["->", 
+                {
+>>>>>>> aa8ef83ba02da4c06698a4dddb3378fa3ca088e5
                   text: "Todos",
                   tooltip: "Seleccionar todas las filas",
                   handler: function(btn) {
@@ -647,7 +652,12 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                       html: Ext.util.Format.htmlEncode(formatter.write(features))
                     }).show();
                   }
+<<<<<<< HEAD
                 }, {
+=======
+                },
+                {
+>>>>>>> aa8ef83ba02da4c06698a4dddb3378fa3ca088e5
                   text: "JSON",
                   tooltip: "generar fichero geoJSON (vectorial) de selección",
                   handler: function(btn) {
@@ -666,7 +676,12 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                       html: Ext.util.Format.htmlEncode(formatter.write(features))
                     }).show();
                   }
+<<<<<<< HEAD
                 }, {
+=======
+                },
+                {
+>>>>>>> aa8ef83ba02da4c06698a4dddb3378fa3ca088e5
                   text: "WKT",
                   tooltip: "generar fichero WKT (vectorial) de selección",
                   handler: function(btn) {
@@ -685,7 +700,12 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                       html: Ext.util.Format.htmlEncode(formatter.write(features))
                     }).show();
                   }
+<<<<<<< HEAD
                 }, { 
+=======
+               },
+               {
+>>>>>>> aa8ef83ba02da4c06698a4dddb3378fa3ca088e5
                   text: "CSV",
                   tooltip: "generar fichero CSV (excel) de selección",
                   handler: function(btn) {
@@ -723,7 +743,10 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                       }
                       miCsv+= "<br/>";
                     });
+<<<<<<< HEAD
 
+=======
+>>>>>>> aa8ef83ba02da4c06698a4dddb3378fa3ca088e5
                     new Ext.Window({
                       animateTarget: btn.el,
                       title: "CSV de selección",
@@ -733,7 +756,12 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                       html: miCsv
                     }).show();
                   }
+<<<<<<< HEAD
                 }, {
+=======
+                },
+                {
+>>>>>>> aa8ef83ba02da4c06698a4dddb3378fa3ca088e5
                     text: "Display on map",
                     enableToggle: true,
                     pressed: true,
