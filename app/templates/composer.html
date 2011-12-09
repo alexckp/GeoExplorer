@@ -132,6 +132,16 @@
             app.mapPanel.map.panTo(new OpenLayers.LonLat(myX,myY));
             app.mapPanel.map.zoomTo(myZ);
           }
+          if (urlParams["l"]) {
+            if (app.isAuthenticated()) {
+              if (urlParams["URL"]) {
+                      window.location = urlParams["URL"];
+                      //location.reload();
+              }
+            } else {
+              app.showLoginDialog();
+            }
+          }
         });
         });
     </script>
