@@ -238,11 +238,6 @@ GeoExplorer.Composer = Ext.extend(GeoExplorer, {
                     this.setCookieValue(this.cookieParamName, user);
                     this.showLogout(user);
                     win.close();
-                    if (urlParams["URL"]) {
-                      window.location = urlParams["URL"];
-                      location.reload();
-                    }
-
                 },
                 failure: function(form, action) {
                     this.authorizedRoles = [];

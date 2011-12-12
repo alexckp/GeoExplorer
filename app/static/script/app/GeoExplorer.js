@@ -234,6 +234,16 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                 url: "../" + mapUrl,
                 success: function(request) {
                     var addConfig = Ext.util.JSON.decode(request.responseText);
+                    // if invoked arg l (force login) and not autenticated, hide all and call showLoginDialog:
+                    if (urlParams["l"] && ! this.isAuthenticated()) {
+                      for (var i in addConfig.map.layers) {
+                        if (addConfig.map.layers[i].transparent===true) {
+                          addConfig.map.layers[i].visibility=false;
+                        }
+                      }
+                      this.showLoginDialog();
+                    }
+
                     this.applyConfig(Ext.applyIf(addConfig, config));
                 },
                 failure: function(request) {
