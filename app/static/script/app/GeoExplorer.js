@@ -102,7 +102,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
     createFeatureLayer: function() {
 
         
-        this.featureLayer = new OpenLayers.Layer.Vector(null, {
+        myVectorLayer = this.featureLayer = new OpenLayers.Layer.Vector(null, {
             displayInLayerSwitcher: false,
             styleMap: new OpenLayers.StyleMap({
                 "default": new OpenLayers.Style(null, {
@@ -636,6 +636,26 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                   tooltip: "Seleccionar todas las filas",
                   handler: function(btn) {
                     Ext.getCmp('featureGrid').selModel.selectAll();
+                  }
+                },
+                {
+                  text: "Limpiar",
+                  tooltip: "Limpiar resultados",
+                  handler: function(btn) {
+                    myGeoExplorer.featureLayer.removeAllFeatures();
+                  }
+                },
+                {
+                  text: "Informe",
+                  tooltip: "Informe de los elementos seleccionados",
+                  handler: function(btn) {
+                    capa="";
+                    ids=[];
+                    Ext.getCmp('featureGrid').selModel.each(function(el) {
+                      ids.push(el.data.fid.split(".")[1]);
+                      capa = el.data.fid.split(".")[0];
+                    });
+                    window.open("http://webdesa-agri.carm.es/php/informes.php?capa=" + capa + "&ids=" + ids.join(','));
                   }
                 },
                 {

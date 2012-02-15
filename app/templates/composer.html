@@ -13,6 +13,8 @@
       }
     </style>
     <script>
+        var myGeoExplorer;
+        var myVectorLayer;
         var getParams = document.URL.split("?"),
             urlParams=Ext.urlDecode(getParams[getParams.length - 1]);
         // optionally set locale based on query string parameter
@@ -27,7 +29,7 @@
         }
         Ext.onReady(function() {
         Ext.QuickTips.init();
-        var app = new GeoExplorer.Composer({
+        var app = myGeoExplorer = new GeoExplorer.Composer({
             authStatus: {{status}},
             proxy: "../proxy/?url=",
             printService: "/geoserver/pdf/",
