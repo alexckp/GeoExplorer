@@ -82,18 +82,24 @@ GeoExplorer.Composer = Ext.extend(GeoExplorer, {
             }, {
                 ptype: "gxp_wmsgetfeatureinfo", format: 'grid', toggleGroup: this.toggleGroup,
                 actionTarget: {target: "paneltbar", index: 7}
-            }, {
+            }];
+            config.tools.push({
                 ptype: "gxp_featuremanager",
                 id: "featuremanager",
                 maxFeatures: 20,
                 paging: false
-            }, {
+            });
+            if (!urlParams["readonly"]) {
+            config.tools.push({
                 ptype: "gxp_featureeditor",
                 featureManager: "featuremanager",
                 autoLoadFeatures: true,
                 toggleGroup: this.toggleGroup,
                 actionTarget: {target: "paneltbar", index: 8}
-            }, {
+            });
+        };
+        config.tools = config.tools.concat([
+            {
                 ptype: "gxp_measure", toggleGroup: this.toggleGroup,
                 controlOptions: {immediate: true},
                 actionTarget: {target: "paneltbar", index: 10}
@@ -106,17 +112,26 @@ GeoExplorer.Composer = Ext.extend(GeoExplorer, {
             }, {
                 ptype: "gxp_zoomtoextent",
                 actionTarget: {target: "paneltbar", index: 15}
-            }, {
+            } 
+        ]);
+    
+        if (urlParams["print"]) {
+          config.tools.push( {
                 ptype: "gxp_print",
                 customParams: {outputFilename: 'GeoExplorer-print'},
                 printService: config.printService,
                 actionTarget: {target: "paneltbar", index: 5}
-            }, {
+            } 
+          );
+        };
+        if (urlParams["googleearth"]) {
+          config.tools.push( {
                 ptype: "gxp_googleearth",
                 actionTarget: {target: "paneltbar", index: 17},
                 apiKeys: Ext.apply({}, config.apiKeys)
-            }
-        ];
+            } 
+          );
+        };
         delete config.apiKeys;
         
         GeoExplorer.Composer.superclass.constructor.apply(this, arguments);
@@ -320,8 +335,9 @@ GeoExplorer.Composer = Ext.extend(GeoExplorer, {
             scope: this
         });
 
-        tools.unshift("-");
-        tools.unshift(new Ext.Button({
+        if (urlParams["publish"]) {
+          tools.unshift("-");
+          tools.unshift(new Ext.Button({
             tooltip: this.exportMapText,
             needsAuthorization: true,
             disabled: !this.isAuthorized() || !this.showSave,
@@ -331,7 +347,13 @@ GeoExplorer.Composer = Ext.extend(GeoExplorer, {
             scope: this,
             iconCls: 'icon-export'
         }));
-        tools.unshift(new Ext.Button({
+        } 
+        else {
+          tools.unshift("");
+          tools.unshift("");
+        };
+        if (urlParams["save"]) {
+          tools.unshift(new Ext.Button({
             tooltip: this.saveMapText,
             needsAuthorization: true,
             disabled: !this.isAuthorized(),
@@ -340,8 +362,13 @@ GeoExplorer.Composer = Ext.extend(GeoExplorer, {
             },
             scope: this,
             iconCls: "icon-save"
-        }));
-        tools.unshift("-");
+          }));
+          tools.unshift("-");
+         }
+       else {
+          tools.unshift("");
+          tools.unshift("");
+       }
         tools.unshift(aboutButton);
         return tools;
     },
